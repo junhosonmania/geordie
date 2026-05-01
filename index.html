@@ -30,7 +30,6 @@
       min-height: 100dvh;
     }
 
-    /* 애니메이션 모드일 때만 overflow hidden */
     body.mode-anim {
       overflow: hidden;
       height: 100vh;
@@ -43,7 +42,7 @@
       padding: 16px 20px 12px;
       border-bottom: 1px solid #000;
       font-weight: 900;
-      font-size: 14px;
+      font-size: 12px;
       letter-spacing: -0.02em;
       line-height: 1.5;
       background: #fff;
@@ -66,22 +65,54 @@
       position: relative;
     }
 
-    /* 애니메이션 영역 */
     .anim-stage {
       width: 100%;
       height: 100%;
       display: flex;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
       padding: 20px;
+      gap: 18px;
     }
 
     body.mode-letter .anim-stage {
       display: none;
     }
 
+    /* 이미지 */
+    .img-slot {
+      width: 100%;
+      max-width: 380px;
+      flex-shrink: 1;
+      min-height: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      transition: opacity 0.18s ease;
+    }
+
+    .img-slot.visible {
+      opacity: 1;
+    }
+
+    .img-slot img {
+      max-width: 100%;
+      max-height: 45vh;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      display: block;
+    }
+
+    /* 이미지 없을 때 텍스트가 더 자유롭게 */
+    .img-slot.empty {
+      display: none;
+    }
+
     h1 {
-      font-size: 7vw;
+      font-size: 6.5vw;
       line-height: 1.3;
       text-align: center;
       word-break: keep-all;
@@ -99,14 +130,17 @@
     }
 
     @media (min-width: 600px) {
-      h1 { font-size: 2.6rem; }
+      h1 { font-size: 2.4rem; }
+      .img-slot { max-width: 440px; }
+      .img-slot img { max-height: 50vh; }
     }
 
     @media (min-width: 900px) {
-      h1 { font-size: 3rem; }
+      h1 { font-size: 2.8rem; }
+      .img-slot { max-width: 500px; }
     }
 
-    /* 전체 편지 영역 (Pretendard Thin) */
+    /* 전체 편지 (Pretendard Thin) */
     .full-letter {
       display: none;
       width: 100%;
@@ -178,6 +212,13 @@
       .full-letter {
         padding: 36px 18px;
       }
+      .anim-stage {
+        gap: 14px;
+        padding: 16px;
+      }
+      .img-slot img {
+        max-height: 40vh;
+      }
     }
 
     @media (min-width: 768px) {
@@ -203,6 +244,9 @@
 
 <main>
   <div class="anim-stage">
+    <div class="img-slot" id="imgSlot">
+      <img id="img" alt="" />
+    </div>
     <h1 id="text"></h1>
   </div>
 
@@ -262,47 +306,48 @@
 </footer>
 
 <script>
+  // img: 이미지 번호 (없으면 null) - 1.jpg ~ 15.jpg 와 매칭
   const lines = [
-    { a: "2022년 12월 2일 롤링홀", p: "fast" },
-    { a: "2023년 7월 28일 노들섬 라이브하우스", p: "fast" },
-    { a: "2025년 2월 20일 롤링홀", p: "fast" },
-    { a: "에서 봤던 조디그립아", p: "snap" },
-    { a: "잘지내니", p: "hold" },
+    { a: "2022년 12월 2일 롤링홀", p: "fast", img: 1 },
+    { a: "2023년 7월 28일 노들섬 라이브하우스", p: "fast", img: 2 },
+    { a: "2025년 2월 20일 롤링홀", p: "fast", img: 3 },
+    { a: "에서 봤던 조디그립아", p: "snap", img: 4 },
+    { a: "잘지내니", p: "hold", img: null },
 
-    { a: "우리는 너가 그립단다", p: "normal" },
-    { a: "비록 너가 공연을 160분했지만", p: "fast" },
-    { a: "다리가 많이 아프고 힘들었지만", p: "fast" },
-    { a: "너가 더 좋은 공연으로 보답해주리라", p: "fast" },
-    { a: "우리는 믿어의심치않아", p: "hold" },
+    { a: "우리는 너가 그립단다", p: "normal", img: null },
+    { a: "비록 너가 공연을 160분했지만", p: "fast", img: 5 },
+    { a: "다리가 많이 아프고 힘들었지만", p: "fast", img: 6 },
+    { a: "너가 더 좋은 공연으로 보답해주리라", p: "fast", img: null },
+    { a: "우리는 믿어의심치않아", p: "hold", img: null },
 
-    { a: "이번에는 신곡도 많이 들려준다고", p: "fast" },
-    { a: "전해 들었어", p: "snap" },
-    { a: "진짜지?", p: "snap" },
-    { a: "고마워", p: "hold" },
+    { a: "이번에는 신곡도 많이 들려준다고", p: "fast", img: 7 },
+    { a: "전해 들었어", p: "snap", img: null },
+    { a: "진짜지?", p: "snap", img: null },
+    { a: "고마워", p: "hold", img: null },
 
-    { a: "그리고 7인조 풀밴드로 온다며", p: "fast" },
-    { a: "색소폰", p: "snap" },
-    { a: "퍼커션", p: "snap" },
-    { a: "키보드까지", p: "snap" },
-    { a: "풍부하겠다", p: "fast" },
-    { a: "나 정말 기대가 많이 되어", p: "normal" },
+    { a: "그리고 7인조 풀밴드로 온다며", p: "fast", img: 8 },
+    { a: "색소폰", p: "snap", img: null },
+    { a: "퍼커션", p: "snap", img: null },
+    { a: "키보드까지", p: "snap", img: null },
+    { a: "풍부하겠다", p: "fast", img: null },
+    { a: "나 정말 기대가 많이 되어", p: "normal", img: null },
 
-    { a: "이번에도 공연은 길거라는 얘기 들었어", p: "fast" },
-    { a: "근데 어떤 면에서 저번같지는 않을거란", p: "fast" },
-    { a: "얘기 역시 들었어", p: "snap" },
-    { a: "보다 밀도 있는 무대를 꾸미고 있다며", p: "fast" },
-    { a: "곡 수도 늘어나서 즉흥연주는 줄고", p: "fast" },
-    { a: "정말 멋진 뭔가를 준비하고 있다고 들었어", p: "normal" },
+    { a: "이번에도 공연은 길거라는 얘기 들었어", p: "fast", img: 9 },
+    { a: "근데 어떤 면에서 저번같지는 않을거란", p: "fast", img: null },
+    { a: "얘기 역시 들었어", p: "snap", img: null },
+    { a: "보다 밀도 있는 무대를 꾸미고 있다며", p: "fast", img: 10 },
+    { a: "곡 수도 늘어나서 즉흥연주는 줄고", p: "fast", img: null },
+    { a: "정말 멋진 뭔가를 준비하고 있다고 들었어", p: "normal", img: null },
 
-    { a: "우리도 기대해볼게", p: "snap" },
-    { a: "7월 28일 화요일 저녁에", p: "fast" },
-    { a: "한남동에서 보자", p: "snap" },
-    { a: "거기 공연장 좋잖아", p: "fast" },
-    { a: "티켓은 다음주 5월 13일 정오부터", p: "fast" },
-    { a: "티켓링크에서 구매해볼게", p: "fast" },
+    { a: "우리도 기대해볼게", p: "snap", img: null },
+    { a: "7월 28일 화요일 저녁에", p: "fast", img: 11 },
+    { a: "한남동에서 보자", p: "snap", img: 12 },
+    { a: "거기 공연장 좋잖아", p: "fast", img: 13 },
+    { a: "티켓은 다음주 5월 13일 정오부터", p: "fast", img: null },
+    { a: "티켓링크에서 구매해볼게", p: "fast", img: 14 },
 
-    { a: "그럼 건강하게 7월에 보자", p: "normal" },
-    { a: "조디야 다시 와줘서 고마워", p: "hold" }
+    { a: "그럼 건강하게 7월에 보자", p: "normal", img: null },
+    { a: "조디야 다시 와줘서 고마워", p: "hold", img: 15 }
   ];
 
   const paceConfig = {
@@ -312,14 +357,20 @@
     hold:   { perChar: 45, min: 950,  fade: 240, gap: 180 }
   };
 
+  // 이미지가 있을 때 살짝 더 머무르도록 보너스 시간
+  const IMG_HOLD_BONUS = 250;
+
   const $text = document.getElementById('text');
+  const $imgSlot = document.getElementById('imgSlot');
+  const $img = document.getElementById('img');
   const $fullLetter = document.getElementById('fullLetter');
   const $body = document.body;
 
   function getTiming(item) {
     const cfg = paceConfig[item.p] || paceConfig.fast;
     const len = item.a.length;
-    const hold = Math.max(cfg.min, len * cfg.perChar);
+    let hold = Math.max(cfg.min, len * cfg.perChar);
+    if (item.img) hold += IMG_HOLD_BONUS;
     return { hold, fade: cfg.fade, gap: cfg.gap };
   }
 
@@ -327,30 +378,53 @@
     return new Promise(r => setTimeout(r, ms));
   }
 
+  // 이미지 미리 로드
+  function preloadImages() {
+    const uniqueNums = [...new Set(lines.map(l => l.img).filter(Boolean))];
+    uniqueNums.forEach(n => {
+      const im = new Image();
+      im.src = n + '.png';
+    });
+  }
+
   async function runAnimation() {
+    preloadImages();
+
     for (let i = 0; i < lines.length; i++) {
       const item = lines[i];
       const t = getTiming(item);
 
+      // 이미지 세팅
+      if (item.img) {
+        $img.src = item.img + '.png';
+        $imgSlot.classList.remove('empty');
+      } else {
+        $imgSlot.classList.add('empty');
+      }
+
+      // 텍스트 세팅
       $text.textContent = item.a;
+
+      // 페이드인
       requestAnimationFrame(() => {
         $text.classList.add('visible');
+        if (item.img) $imgSlot.classList.add('visible');
       });
 
       await sleep(t.fade + t.hold);
 
+      // 페이드아웃
       $text.classList.remove('visible');
+      $imgSlot.classList.remove('visible');
+
       await sleep(t.fade + t.gap);
     }
 
-    // 마지막 줄 끝난 후 잠깐 호흡
     await sleep(600);
 
-    // 모드 전환: 애니메이션 → 전체 편지
     $body.classList.remove('mode-anim');
     $body.classList.add('mode-letter');
 
-    // 전체 편지 페이드인
     requestAnimationFrame(() => {
       $fullLetter.classList.add('visible');
     });
