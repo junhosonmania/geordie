@@ -357,8 +357,8 @@
     hold:   { perChar: 45, min: 950,  fade: 240, gap: 180 }
   };
 
-  // 이미지가 있을 때 살짝 더 머무르도록 보너스 시간
-  const IMG_HOLD_BONUS = 250;
+  // 이미지가 있을 때 머무는 시간 1.5배 (로딩 시간 고려)
+  const IMG_HOLD_MULTIPLIER = 1.5;
 
   const $text = document.getElementById('text');
   const $imgSlot = document.getElementById('imgSlot');
@@ -370,7 +370,7 @@
     const cfg = paceConfig[item.p] || paceConfig.fast;
     const len = item.a.length;
     let hold = Math.max(cfg.min, len * cfg.perChar);
-    if (item.img) hold += IMG_HOLD_BONUS;
+    if (item.img) hold *= IMG_HOLD_MULTIPLIER;
     return { hold, fade: cfg.fade, gap: cfg.gap };
   }
 
