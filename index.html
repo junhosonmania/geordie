@@ -28,6 +28,16 @@
       flex-direction: column;
       min-height: 100vh;
       min-height: 100dvh;
+      transition: background-color 0.2s ease;
+    }
+
+    /* 2배속 모드일 때 배경 옅은 노란색 */
+    body.fast-mode {
+      background-color: #fff8d6;
+    }
+    body.fast-mode header,
+    body.fast-mode footer {
+      background-color: #fff8d6;
     }
 
     body.mode-anim {
@@ -240,7 +250,7 @@
       position: fixed;
       right: 16px;
       bottom: 60px;
-      z-index: 20;
+      z-index: 100;
       background: #000;
       color: #fff;
       font-family: "Pretendard", sans-serif;
@@ -251,18 +261,22 @@
       border: none;
       border-radius: 0;
       cursor: pointer;
+      pointer-events: auto;
       -webkit-user-select: none;
       user-select: none;
       -webkit-touch-callout: none;
+      -webkit-tap-highlight-color: transparent;
       touch-action: manipulation;
       transition: transform 0.1s ease, background 0.1s ease;
       box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      outline: none;
     }
 
     .speed-btn:active,
     .speed-btn.pressing {
       transform: scale(0.94);
-      background: #333;
+      background: #fff8d6;
+      color: #000;
     }
 
     body.mode-letter .speed-btn {
@@ -351,7 +365,7 @@
   </div>
 </footer>
 
-<button class="speed-btn" id="speedBtn" type="button">배속</button>
+<button class="speed-btn" id="speedBtn" type="button">(배속)</button>
 
 <script>
   // img: 이미지 번호 (없으면 null) - 1.jpg ~ 15.jpg 와 매칭
@@ -414,20 +428,22 @@
 
   function setupSpeedControl() {
     const btn = document.getElementById('speedBtn');
-    const press = (e) => {
-      e.preventDefault();
+
+    const press = () => {
       speedMultiplier = SPEED_FAST;
       btn.classList.add('pressing');
+      document.body.classList.add('fast-mode');
     };
     const release = () => {
       speedMultiplier = 1;
       btn.classList.remove('pressing');
+      document.body.classList.remove('fast-mode');
     };
 
     // 터치 (모바일)
-    btn.addEventListener('touchstart', press, { passive: false });
-    btn.addEventListener('touchend', release);
-    btn.addEventListener('touchcancel', release);
+    btn.addEventListener('touchstart', press, { passive: true });
+    btn.addEventListener('touchend', release, { passive: true });
+    btn.addEventListener('touchcancel', release, { passive: true });
 
     // 마우스 (데스크톱)
     btn.addEventListener('mousedown', press);
@@ -436,8 +452,6 @@
 
     // 컨텍스트 메뉴 방지
     btn.addEventListener('contextmenu', (e) => e.preventDefault());
-  }
-  setupSpeedControl();
   }
   setupSpeedControl();
 
@@ -460,13 +474,13 @@
   }
 
   // 실시간 속도 반영하는 sleep (꾹 누르는 도중에 속도 변경 즉시 반영)
+  // ms는 "1배속 기준 가상 시간". 매 tick마다 현재 속도로 가상 시간을 진행시킴.
   async function dynamicSleep(ms) {
-    const tick = 30; // 30ms 단위로 체크
-    let elapsed = 0;
-    while (elapsed < ms) {
-      const step = Math.min(tick, ms - elapsed);
-      await sleep(step / speedMultiplier);
-      elapsed += step;
+    const tick = 25;
+    let virtualElapsed = 0;
+    while (virtualElapsed < ms) {
+      await sleep(tick);
+      virtualElapsed += tick * speedMultiplier;
     }
   }
 
