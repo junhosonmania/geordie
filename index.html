@@ -31,13 +31,13 @@
       transition: background-color 0.2s ease;
     }
 
-    /* 2배속 모드일 때 배경 옅은 노란색 */
+    /* 2배속 모드일 때 배경 샛노란색 */
     body.fast-mode {
-      background-color: #fff8d6;
+      background-color: #fff200;
     }
     body.fast-mode header,
     body.fast-mode footer {
-      background-color: #fff8d6;
+      background-color: #fff200;
     }
 
     body.mode-anim {
@@ -119,9 +119,16 @@
       display: block;
     }
 
-    /* 이미지 없을 때 텍스트가 더 자유롭게 */
+    /* 이미지 없을 때 슬롯을 0 높이로 (텍스트가 정중앙으로) */
     .img-slot.empty {
-      display: none;
+      height: 0;
+      max-height: 0;
+      overflow: hidden;
+      margin: 0;
+    }
+
+    body.mode-anim .anim-stage:has(.img-slot.empty) {
+      gap: 0;
     }
 
     h1 {
@@ -153,19 +160,33 @@
       .img-slot { max-width: 500px; }
     }
 
-    /* 전체 편지 (Pretendard Thin) */
+    /* 전체 편지 (Pretendard Medium) - 한 화면에 들어가도록 */
     .full-letter {
       display: none;
       width: 100%;
-      max-width: 640px;
+      max-width: 1100px;
       margin: 0 auto;
-      padding: 48px 24px;
-      font-weight: 100;
-      font-size: clamp(15px, 4.2vw, 19px);
-      line-height: 1.7;
+      padding: 24px 20px;
+      font-weight: 500;
       letter-spacing: -0.02em;
       opacity: 0;
       transition: opacity 0.8s ease;
+      /* 모바일: 한 컬럼, 화면에 맞게 폰트 자동 축소 */
+      font-size: clamp(11px, 3vw, 14px);
+      line-height: 1.5;
+    }
+
+    body.mode-letter {
+      overflow: hidden;
+      height: 100vh;
+      height: 100dvh;
+    }
+
+    body.mode-letter main {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
     }
 
     body.mode-letter .full-letter {
@@ -177,7 +198,7 @@
     }
 
     .full-letter .stanza {
-      margin-bottom: 1.4em;
+      margin-bottom: 0.9em;
     }
 
     .full-letter .stanza:last-child {
@@ -186,6 +207,21 @@
 
     .full-letter p {
       margin: 0;
+    }
+
+    /* PC에서는 2컬럼 레이아웃 - 한 화면 캡처 가능 */
+    @media (min-width: 768px) {
+      .full-letter {
+        column-count: 2;
+        column-gap: 48px;
+        font-size: clamp(13px, 1.4vw, 16px);
+        line-height: 1.6;
+        padding: 32px 40px;
+      }
+      .full-letter .stanza {
+        break-inside: avoid;
+        margin-bottom: 1em;
+      }
     }
 
     footer {
@@ -223,7 +259,7 @@
         padding-right: 16px;
       }
       .full-letter {
-        padding: 36px 18px;
+        padding: 18px 16px;
       }
       .anim-stage {
         gap: 14px;
@@ -239,9 +275,6 @@
         font-size: 13px;
         padding-left: 32px;
         padding-right: 32px;
-      }
-      .full-letter {
-        padding: 64px 32px;
       }
     }
 
@@ -275,7 +308,7 @@
     .speed-btn:active,
     .speed-btn.pressing {
       transform: scale(0.94);
-      background: #fff8d6;
+      background: #fff200;
       color: #000;
     }
 
@@ -422,9 +455,9 @@
   // 이미지가 있을 때 머무는 시간 1.5배 (로딩 시간 고려)
   const IMG_HOLD_MULTIPLIER = 1.5;
 
-  // 2배속 (꾹 누르는 동안)
+  // 3배속 (꾹 누르는 동안)
   let speedMultiplier = 1;
-  const SPEED_FAST = 2;
+  const SPEED_FAST = 3;
 
   function setupSpeedControl() {
     const btn = document.getElementById('speedBtn');
