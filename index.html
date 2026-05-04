@@ -34,6 +34,9 @@
       overflow: hidden;
       height: 100vh;
       height: 100dvh;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
     }
 
     header {
@@ -231,6 +234,49 @@
         padding: 64px 32px;
       }
     }
+
+    /* 배속 버튼 */
+    .speed-btn {
+      position: fixed;
+      right: 16px;
+      bottom: 60px;
+      z-index: 20;
+      background: #000;
+      color: #fff;
+      font-family: "Pretendard", sans-serif;
+      font-weight: 900;
+      font-size: 14px;
+      letter-spacing: -0.02em;
+      padding: 12px 18px;
+      border: none;
+      border-radius: 0;
+      cursor: pointer;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+      touch-action: manipulation;
+      transition: transform 0.1s ease, background 0.1s ease;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    .speed-btn:active,
+    .speed-btn.pressing {
+      transform: scale(0.94);
+      background: #333;
+    }
+
+    body.mode-letter .speed-btn {
+      display: none;
+    }
+
+    @media (min-width: 768px) {
+      .speed-btn {
+        right: 24px;
+        bottom: 68px;
+        font-size: 15px;
+        padding: 14px 22px;
+      }
+    }
   </style>
 </head>
 <body class="mode-anim">
@@ -305,6 +351,8 @@
   </div>
 </footer>
 
+<button class="speed-btn" id="speedBtn" type="button">배속</button>
+
 <script>
   // img: 이미지 번호 (없으면 null) - 1.jpg ~ 15.jpg 와 매칭
   const lines = [
@@ -335,7 +383,7 @@
     { a: "이번에도 공연은 길거라는 얘기 들었어", p: "fast", img: 9 },
     { a: "근데 어떤 면에서 저번같지는 않을거란", p: "fast", img: null },
     { a: "얘기 역시 들었어", p: "snap", img: null },
-    { a: "보다 밀도 있는 무대를 꾸미고 있다며", p: "fast", img: 10 },
+    { a: "보다 밀도 있는 무대를 꾸미고 있다며", p: "fast", img: null },
     { a: "곡 수도 늘어나서 즉흥연주는 줄고", p: "fast", img: null },
     { a: "정말 멋진 뭔가를 준비하고 있다고 들었어", p: "normal", img: null },
 
@@ -360,6 +408,39 @@
   // 이미지가 있을 때 머무는 시간 1.5배 (로딩 시간 고려)
   const IMG_HOLD_MULTIPLIER = 1.5;
 
+  // 2배속 (꾹 누르는 동안)
+  let speedMultiplier = 1;
+  const SPEED_FAST = 2;
+
+  function setupSpeedControl() {
+    const btn = document.getElementById('speedBtn');
+    const press = (e) => {
+      e.preventDefault();
+      speedMultiplier = SPEED_FAST;
+      btn.classList.add('pressing');
+    };
+    const release = () => {
+      speedMultiplier = 1;
+      btn.classList.remove('pressing');
+    };
+
+    // 터치 (모바일)
+    btn.addEventListener('touchstart', press, { passive: false });
+    btn.addEventListener('touchend', release);
+    btn.addEventListener('touchcancel', release);
+
+    // 마우스 (데스크톱)
+    btn.addEventListener('mousedown', press);
+    btn.addEventListener('mouseup', release);
+    btn.addEventListener('mouseleave', release);
+
+    // 컨텍스트 메뉴 방지
+    btn.addEventListener('contextmenu', (e) => e.preventDefault());
+  }
+  setupSpeedControl();
+  }
+  setupSpeedControl();
+
   const $text = document.getElementById('text');
   const $imgSlot = document.getElementById('imgSlot');
   const $img = document.getElementById('img');
@@ -376,6 +457,17 @@
 
   function sleep(ms) {
     return new Promise(r => setTimeout(r, ms));
+  }
+
+  // 실시간 속도 반영하는 sleep (꾹 누르는 도중에 속도 변경 즉시 반영)
+  async function dynamicSleep(ms) {
+    const tick = 30; // 30ms 단위로 체크
+    let elapsed = 0;
+    while (elapsed < ms) {
+      const step = Math.min(tick, ms - elapsed);
+      await sleep(step / speedMultiplier);
+      elapsed += step;
+    }
   }
 
   // 이미지 미리 로드
@@ -406,21 +498,30 @@
       $text.textContent = item.a;
 
       // 페이드인
+      // 페이드 시간도 속도에 맞춰 조정
+      const fadeMs = t.fade / speedMultiplier;
+      $text.style.transitionDuration = fadeMs + 'ms';
+      $imgSlot.style.transitionDuration = fadeMs + 'ms';
+
       requestAnimationFrame(() => {
         $text.classList.add('visible');
         if (item.img) $imgSlot.classList.add('visible');
       });
 
-      await sleep(t.fade + t.hold);
+      await dynamicSleep(t.fade + t.hold);
 
       // 페이드아웃
+      const fadeMsOut = t.fade / speedMultiplier;
+      $text.style.transitionDuration = fadeMsOut + 'ms';
+      $imgSlot.style.transitionDuration = fadeMsOut + 'ms';
+
       $text.classList.remove('visible');
       $imgSlot.classList.remove('visible');
 
-      await sleep(t.fade + t.gap);
+      await dynamicSleep(t.fade + t.gap);
     }
 
-    await sleep(600);
+    await dynamicSleep(600);
 
     $body.classList.remove('mode-anim');
     $body.classList.add('mode-letter');
